@@ -1,6 +1,7 @@
 package com.springboot.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.springboot.security.service.MyUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import javax.annotation.Resource;
 import java.io.PrintWriter;
 
 /**
@@ -24,6 +26,10 @@ import java.io.PrintWriter;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    
+    @Resource
+    private MyUserDetailsService userDetailsService;
+    
     /**
      * -------------------------------------- 1、简单案例。 设置 用户名、密码，不使用 security 自带的生成密码方式。 --------------------------------------
      */
@@ -31,6 +37,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     PasswordEncoder passwordEncoder() {
         // 目前的案例还比较简单，暂时先不给密码进行加密，所以返回 NoOpPasswordEncoder 的实例即可
         return NoOpPasswordEncoder.getInstance();
+    }
+
+    /**
+     * -------------------------------------------------- 将用户设置到数据库中 --------------------------------------------------
+     * 
+     * @param auth
+     * @throws Exception
+     */
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService);
     }
 
     /**
@@ -42,19 +59,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * @param auth
      * @throws Exception
      */
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                /**
-                 * 现在还没有连接数据库，所以测试用户还是基于内存来配置
-                 * inMemoryAuthentication 开启在内存中定义用户。 在内存中配置了两个用户
-                 */
-                .inMemoryAuthentication()
-                .withUser("root").password("root").roles("admin")
-                // and 符号相当于就是 XML 标签的结束符，表示结束当前标签。这是个时候上下文会回到 inMemoryAuthentication 方法中，然后开启新用户的配置
-                .and()
-                .withUser("静、水无痕").password("123").roles("user");
-    }
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth
+//                /**
+//                 * 现在还没有连接数据库，所以测试用户还是基于内存来配置
+//                 * inMemoryAuthentication 开启在内存中定义用户。 在内存中配置了两个用户
+//                 */
+//                .inMemoryAuthentication()
+//                .withUser("root").password("root").roles("admin")
+//                // and 符号相当于就是 XML 标签的结束符，表示结束当前标签。这是个时候上下文会回到 inMemoryAuthentication 方法中，然后开启新用户的配置
+//                .and()
+//                .withUser("静、水无痕").password("123").roles("user");
+//    }
 
     /**
      * -------------------------------------------------- 将用户设置到内存中 方法二 *************** 与上面方法只能共存一个 *************** --------------------------------------------------
@@ -63,13 +80,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * <p>
      * 因此我们还可以通过重写 WebSecurityConfigurerAdapter 中的 userDetailsService 方法来提供一个 UserDetailService 实例进而配置多个用户
      */
-    @Override
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager.createUser(User.withUsername("javaboy").password("123").roles("admin").build());
-        return manager;
-    }
+//    @Override
+//    @Bean
+//    protected UserDetailsService userDetailsService() {
+//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+//        manager.createUser(User.withUsername("javaboy").password("123").roles("admin").build());
+//        return manager;
+//    }
 
     /**
      * -------------------------------------- 2、继续添加配置。 --------------------------------------
@@ -236,7 +253,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .failureHandler((req, resp, e) -> {
                     resp.setContentType("application/json;charset=utf-8");
                     PrintWriter out = resp.getWriter();
-                    out.write(e.getMessage());
+                    out.write("登录失败： " + e.getMessage());
                     out.flush();
                     out.close();
                 })
