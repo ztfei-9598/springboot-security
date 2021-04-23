@@ -33,6 +33,6 @@ build/
 /.mvn/
 /mvnw
 /mvnw.cmd
-/security-01-start/.mvn/
-/security-01-start/mvnw
-/security-01-start/mvnw.cmd
+/*/.mvn/
+/*/mvnw
+/*/mvnw.cmd

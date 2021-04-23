@@ -19,10 +19,11 @@
     </properties>
 
     <modules>
-        <module>security-01-start</module>
         <module>security-00-service</module>
         <module>security-00-dao</module>
         <module>security-00-domain</module>
+        <module>security-01-start</module>
+        <module>security-02-authenticate</module>
     </modules>
     
     <!-- 子项目依赖父项目，版本号无法继承显示Unknown的解决办法 放在<dependenceManagement>里面 -->
