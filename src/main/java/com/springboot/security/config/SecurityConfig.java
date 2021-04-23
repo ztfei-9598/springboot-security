@@ -26,10 +26,10 @@ import java.io.PrintWriter;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    
+
     @Resource
     private MyUserDetailsService userDetailsService;
-    
+
     /**
      * -------------------------------------- 1、简单案例。 设置 用户名、密码，不使用 security 自带的生成密码方式。 --------------------------------------
      */
@@ -41,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
      * -------------------------------------------------- 将用户设置到数据库中 --------------------------------------------------
-     * 
+     *
      * @param auth
      * @throws Exception
      */
@@ -142,7 +142,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  */
                 .formLogin()
                 // 登录页面
-                .loginPage("/login.html")
+//                .loginPage("/login.html")
                 // 指定登录接口 - 要同步修改 login.html 页面中的表单项 <form action="/doLogin" method="post">
 //                .loginProcessingUrl("/doLogin")
                 /**
@@ -259,6 +259,40 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 })
                 // permitAll 表示登录相关的页面/接口不要被拦截。
                 .permitAll()
+                .and()
+                /**
+                 * 用户在登录成功后，在某一段时间内，如果用户关闭了浏览器并重新打开，或者服务器重启了，都不需要用户重新登录了，用户依然可以直接访问接口数据
+                 * 关闭浏览器，再重新打开浏览器。正常情况下，浏览器关闭再重新打开，如果需要再次访问 hello 接口，就需要我们重新登录了。
+                 * 但是此时，我们再去访问 hello 接口，发现不用重新登录了，直接就能访问到，这就说明我们的 RememberMe 配置生效了
+                 *
+                 *  cookie 中多出来的这个 remember-me: YWRtaW46MTYyMDM2NjIyNzQyMjoyMTZjNjE2ZmU0NGRmNmM3OGI0ZjY3ZDU3NTFlYjFhMQ
+                 *  Base64 解码后得到字符串
+                 *  admin:1620366227422:216c616fe44df6c78b4f67d5751eb1a1
+                 * 第一段是用户名，这个无需质疑。
+                 * 第二段看起来是一个时间戳，我们通过在线工具或者 Java 代码解析后发现，这是一个两周后的数据。
+                 * 第三段我就不卖关子了，这是使用 MD5 散列函数算出来的值，
+                 * 他的明文格式是 username + ":" + tokenExpiryTime + ":" + password + ":" + key，最后的 key 是一个散列盐值，可以用来防治令牌被修改。
+                 *
+                 * 如果我们没有自己去设置这个 key，默认是在 RememberMeConfigurer#getKey 方法中进行设置的，它的值是一个 UUID 字符串。
+                 * 
+                 * 流程：
+                 * 在浏览器关闭后，并重新打开之后，用户再去访问 hello 接口，此时会携带着 cookie 中的 remember-me 到服务端，
+                 * 服务到拿到值之后，可以方便的计算出用户名和过期时间，再根据用户名查询到用户密码，然后通过 MD5 散列函数计算出散列值，
+                 * 再将计算出的散列值和浏览器传递来的散列值进行对比，就能确认这个令牌是否有效。
+                 * 
+                 * 生成的核心:
+                 * TokenBasedRememberMeServices#onLoginSuccess
+                 * 
+                 * 解析：用户关掉并打开浏览器之后，重新访问 /hello 接口，此时的认证流程又是怎么样的？？
+                 * Spring Security 中的一系列功能都是通过一个过滤器链实现的，RememberMe 这个功能当然也不例外 ： RememberMeAuthenticationFilter doFilter()
+                 * - 如果从 SecurityContextHolder 中无法获取到当前登录用户实例，那么就调用 rememberMeServices.autoLogin 逻辑进行登录
+                 * - 提取出 cookie 信息，并对 cookie 信息进行解码，解码之后，再调用 processAutoLoginCookie 方法去做校验
+                 */
+                .rememberMe()
+                /**
+                 * key 默认值是一个 UUID 字符串，这样会带来一个问题，就是如果服务端重启，这个 key 会变，这样就导致之前派发出去的所有 remember-me 自动登录令牌失效，所以，我们可以指定这个 key
+                 */
+                .key("spring-security")
                 /**
                  * 5、注销登录
                  */
