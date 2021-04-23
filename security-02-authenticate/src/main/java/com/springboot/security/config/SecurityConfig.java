@@ -50,6 +50,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource
     private MyUserDetailsService userDetailsService;
 
+    @Resource
+    private MyWebAuthenticationDetailsSource myWebAuthenticationDetailsSource;
+    
     @Bean
     PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
@@ -101,6 +104,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  * 登录
                  */
                 .formLogin()
+                .authenticationDetailsSource(myWebAuthenticationDetailsSource)
                 .successHandler((req, resp, authentication) -> {
                     Object principal = authentication.getPrincipal();
                     resp.setContentType("application/json;charset=utf-8");
