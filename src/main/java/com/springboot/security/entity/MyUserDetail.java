@@ -1,5 +1,6 @@
 package com.springboot.security.entity;
 
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,6 +17,7 @@ import java.util.Set;
  */
 
 @Data
+@Builder
 public class MyUserDetail extends User implements UserDetails {
 
     /***
