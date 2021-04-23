@@ -15,8 +15,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 
 import javax.annotation.Resource;
+import javax.sql.DataSource;
 import java.io.PrintWriter;
 
 /**
@@ -29,7 +31,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Resource
     private MyUserDetailsService userDetailsService;
+    
+    @Resource
+    DataSource dataSource;
 
+    /**
+     * ----------------- 持久化令牌 -----------------
+     * 
+     * 保存令牌的处理类则是 PersistentRememberMeToken
+     * 需要一张表来记录令牌信息，这张表我们可以完全自定义，也可以使用系统默认提供的 JDBC 来操作，如果使用默认的 JDBC，即 JdbcTokenRepositoryImpl
+     * 
+     * @return
+     */
+    @Bean
+    JdbcTokenRepositoryImpl jdbcTokenRepository() {
+        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
+        jdbcTokenRepository.setDataSource(dataSource);
+        return jdbcTokenRepository;
+    }
     /**
      * -------------------------------------- 1、简单案例。 设置 用户名、密码，不使用 security 自带的生成密码方式。 --------------------------------------
      */
@@ -125,8 +144,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  * 二、拦截规则的配置类 AbstractRequestMatcherRegistry
                  *      在任何拦截规则之前（包括 anyRequest 自身），都会先判断 anyRequest 是否已经配置，如果已经配置，则会抛出异常，系统启动失败
                  */
-                .antMatchers("/admin/**").hasRole("admin")
-                .antMatchers("/user/**").hasRole("user")
+//                .antMatchers("/admin/**").hasRole("admin")
+//                .antMatchers("/user/**").hasRole("user")
+                /**
+                 * 持久化令牌的方式依然存在用户身份被盗用的问题
+                 * 另一种方案，就是二次校验。
+                 * 为了让用户使用方便，我们开通了自动登录功能，但是自动登录功能又带来了安全风险，
+                 * 一个规避的办法就是如果用户使用了自动登录功能，我们可以只让他做一些常规的不敏感操作，
+                 * 例如数据浏览、查看，但是不允许他做任何修改、删除操作，如果用户点击了修改、删除按钮，我们可以跳转回登录页面，让用户重新输入密码确认身份，然后再允许他执行敏感操作
+                 */
+                //  /rememberme 接口，必须是通过自动登录认证后才能访问，如果用户是通过用户名/密码认证的，则无法访问该接口
+                .antMatchers("/rememberme").rememberMe()
+                //  /admin 接口，必须要用户名密码认证之后才能访问，如果用户是通过自动登录认证的，则必须重新输入用户名密码才能访问该接口
+                .antMatchers("/admin/**").fullyAuthenticated()
                 /**
                  * 剩余的其他格式的请求路径，只需要认证（登录）后就可以访问
                  */
@@ -293,6 +323,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  * key 默认值是一个 UUID 字符串，这样会带来一个问题，就是如果服务端重启，这个 key 会变，这样就导致之前派发出去的所有 remember-me 自动登录令牌失效，所以，我们可以指定这个 key
                  */
                 .key("spring-security")
+                /**
+                 * 持久化令牌
+                 * 
+                 * 生成令牌/解析令牌的实现类变了  这次的实现类主要是：PersistentTokenBasedRememberMeServices
+                 * 令牌生成：onLoginSuccess
+                 *      1.在登录成功后，首先还是获取到用户名，即 username。
+                 *      2.接下来构造一个 PersistentRememberMeToken 实例，generateSeriesData 和 generateTokenData 方法分别用来获取 series 和 token，具体的生成过程实际上就是调用 SecureRandom 生成随机数再进行 Base64 编码，不同于我们以前用的 Math.random 或者 java.util.Random 这种伪随机数，SecureRandom 则采用的是类似于密码学的随机数生成规则，其输出结果较难预测，适合在登录这样的场景下使用。
+                 *      3.调用 tokenRepository 实例中的 createNewToken 方法，tokenRepository 实际上就是我们一开始配置的 JdbcTokenRepositoryImpl，所以这行代码实际上就是将 PersistentRememberMeToken 存入数据库中。
+                 *      4.最后 addCookie，大家可以看到，就是添加了 series 和 token
+                 * 令牌解析：processAutoLoginCookie
+                 *      1.首先从前端传来的 cookie 中解析出 series 和 token。
+                 *      2.根据 series 从数据库中查询出一个 PersistentRememberMeToken 实例。
+                 *      3.如果查出来的 token 和前端传来的 token 不相同，说明账号可能被人盗用（别人用你的令牌登录之后，token 会变）。此时根据用户名移除相关的 token，相当于必须要重新输入用户名密码登录才能获取新的自动登录权限。
+                 *      4.接下来校验 token 是否过期。
+                 *      5.构造新的 PersistentRememberMeToken 对象，并且更新数据库中的 token（这就是我们文章开头说的，新的会话都会对应一个新的 token）。
+                 *      6.将新的令牌重新添加到 cookie 中返回。
+                 *      7.根据用户名查询用户信息，再走一波登录流程
+                 */
+                .tokenRepository(jdbcTokenRepository())
                 /**
                  * 5、注销登录
                  */
