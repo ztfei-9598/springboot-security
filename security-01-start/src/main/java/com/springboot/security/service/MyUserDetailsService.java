@@ -1,7 +1,7 @@
 package com.springboot.security.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.springboot.security.entity.MyUserDetail;
+import com.springboot.security.domain.MyUserDetail;
 import com.springboot.security.entity.Role;
 import com.springboot.security.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;

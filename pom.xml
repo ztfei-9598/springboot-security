@@ -6,65 +6,83 @@
     <artifactId>springboot-security</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>springboot-security</name>
+    <packaging>pom</packaging>
     <description>springboot-security 使用示例</description>
+
     <properties>
         <java.version>1.8</java.version>
+        <springboot.version>2.4.5</springboot.version>
+        <springboot.security.version>2.4.5</springboot.security.version>
+        <lombok.version>1.18.20</lombok.version>
+        <mybatis.plus.version>3.4.2</mybatis.plus.version>
+        <mysql.connector.version>8.0.23</mysql.connector.version>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <version>2.4.5</version>
-        </dependency>
-        <!-- 
-        1、
-            spring-boot-starter-security 用于权限校验。
-            Spring Security致力于为Java应用提供认证和授权管理。它是一个强大的，高度自定义的认证和访问控制框架。
-            当应用启动的时候，自动配置功能会探测到Spring Security出现在了类路径中，因此它会初始化一些基本的安全配置。
-            访问主页：
-                    【访问Actuator端点[http://localhost:8080/actuator]会跳转到一个登录页面[http://localhost:8080/login]】
-                    用户名为 user，而密码则是随机生成的，它会被写入应用的日志文件中
-                    
-         2、spring security 的核心功能主要包括：
-            - 认证 （你是谁）认证是验证用户身份的合法性
-            - 授权 （你能干什么） 授权是控制你可以做什么
-            - 攻击防护 （防止伪造身份）
-         3、Spring Security 的核心原理是一组过滤器链,每个过滤器可以处理一种认证请求,最后有一个捕获异常的过滤器用来处理登陆过程中的异常
-         4、Spring Security的核心组件
-                SecurityContextHolder：  提供对SecurityContext的访问
-                SecurityContext,：       持有Authentication对象和其他可能需要的信息
-                AuthenticationManager：  其中可以包含多个AuthenticationProvider
-                ProviderManager：        为AuthenticationManager接口的实现类
-                AuthenticationProvider： 主要用来进行认证操作的类 调用其中的authenticate()方法去进行认证操作
-                Authentication：         Spring Security方式的认证主体
-                GrantedAuthority：       对认证主题的应用层面的授权，含当前用户的权限信息，通常使用角色表示
-                UserDetails：            构建Authentication对象必须的信息，可以自定义，可能需要访问DB得到
-                UserDetailsService：     通过username构建UserDetails对象
-         -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-            <version>2.4.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
-            <optional>true</optional>
-        </dependency>
-        <!--MyBatis—plus-->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.2</version>
-        </dependency>
-        <!--数据库相关-->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.23</version>
-        </dependency>
-    </dependencies>
+
+    <modules>
+        <module>security-01-start</module>
+        <module>security-00-service</module>
+        <module>security-00-dao</module>
+        <module>security-00-domain</module>
+    </modules>
+    
+    <!-- 子项目依赖父项目，版本号无法继承显示Unknown的解决办法 放在<dependenceManagement>里面 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!-- 
+            1、
+                spring-boot-starter-security 用于权限校验。
+                Spring Security致力于为Java应用提供认证和授权管理。它是一个强大的，高度自定义的认证和访问控制框架。
+                当应用启动的时候，自动配置功能会探测到Spring Security出现在了类路径中，因此它会初始化一些基本的安全配置。
+                访问主页：
+                        【访问Actuator端点[http://localhost:8080/actuator]会跳转到一个登录页面[http://localhost:8080/login]】
+                        用户名为 user，而密码则是随机生成的，它会被写入应用的日志文件中
+                        
+             2、spring security 的核心功能主要包括：
+                - 认证 （你是谁）认证是验证用户身份的合法性
+                - 授权 （你能干什么） 授权是控制你可以做什么
+                - 攻击防护 （防止伪造身份）
+             3、Spring Security 的核心原理是一组过滤器链,每个过滤器可以处理一种认证请求,最后有一个捕获异常的过滤器用来处理登陆过程中的异常
+             4、Spring Security的核心组件
+                    SecurityContextHolder：  提供对SecurityContext的访问
+                    SecurityContext,：       持有Authentication对象和其他可能需要的信息
+                    AuthenticationManager：  其中可以包含多个AuthenticationProvider
+                    ProviderManager：        为AuthenticationManager接口的实现类
+                    AuthenticationProvider： 主要用来进行认证操作的类 调用其中的authenticate()方法去进行认证操作
+                    Authentication：         Spring Security方式的认证主体
+                    GrantedAuthority：       对认证主题的应用层面的授权，含当前用户的权限信息，通常使用角色表示
+                    UserDetails：            构建Authentication对象必须的信息，可以自定义，可能需要访问DB得到
+                    UserDetailsService：     通过username构建UserDetails对象
+             -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <version>${springboot.security.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <!--MyBatis—plus-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis.plus.version}</version>
+            </dependency>
+            <!--数据库相关-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.connector.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

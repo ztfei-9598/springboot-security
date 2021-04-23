@@ -1,5 +1,7 @@
-package com.springboot.security.entity;
+package com.springboot.security.domain;
 
+import com.springboot.security.entity.Role;
+import com.springboot.security.entity.User;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
