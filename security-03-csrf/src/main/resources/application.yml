@@ -8,5 +8,10 @@ spring:
       name: admin
       password: admin
       roles: admin
-
+  mvc:
+    view:
+      # prefix这个路径的值一定是templates，所以HTML页面必须放在templates目录下，完整路径为：src/main/resources/templates
+      prefix: templates/
+      # suffix是指文件后缀，设置这个值以后在路由映射匹配时可以设略前缀
+      suffix: .html
 

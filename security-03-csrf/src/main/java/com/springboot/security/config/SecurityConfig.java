@@ -39,19 +39,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().anyRequest().authenticated()
                 .and()
                 .formLogin()
-                /**
-                 * 访问 login.html 页面，输入用户名密码进行登录， _csrf 配置已经生效了
-                 * 前后端分离时，需要添加 login.html页面  配置一下登录页面，以及登录成功的回调
-                 */
-                .loginPage("/login.html")
-                .successHandler((req, resp, authentication) -> {
-                    resp.getWriter().write("success");
-                })
-                .permitAll()
+//                /**
+//                 * 访问 login.html 页面，输入用户名密码进行登录， _csrf 配置已经生效了
+//                 * 前后端分离时，需要添加 login.html页面  配置一下登录页面，以及登录成功的回调
+//                 */
+//                .loginPage("/login.html")
+//                .successHandler((req, resp, authentication) -> {
+//                    resp.getWriter().write("success");
+//                })
+//                .permitAll()
                 .and()
                 .csrf()
                 // Spring Security 中默认是可以自动防御 CSRF 攻击的，所以我们要把这个关闭掉
-//                .disable();
+                .disable();
                 //
                 /**
                  * 给 js 文件放行
@@ -59,6 +59,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  * 通过 withHttpOnlyFalse 方法获取了 CookieCsrfTokenRepository 的实例，该方法会设置 Cookie 中的 HttpOnly 属性为 false，
                  * 也就是允许前端通过 js 操作 Cookie（否则你就没有办法获取到 _csrf）
                  */
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+//                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
     }
 }
