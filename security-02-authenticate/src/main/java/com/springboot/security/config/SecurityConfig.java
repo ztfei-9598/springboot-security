@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import javax.annotation.Resource;
 import java.io.PrintWriter;
@@ -127,9 +128,36 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .logout().logoutUrl("/logout").logoutSuccessUrl("/index")
                 // 清除 cookie
-                .deleteCookies();
+                .deleteCookies()
+                .and()
+                /**
+                 * 配置完成后，分别用 Chrome 和 Firefox 两个浏览器进行测试（或者使用 Chrome 中的多用户功能）。
+                 *
+                 * Chrome 上登录成功后，访问 /hello 接口。
+                 * Firefox 上登录成功后，访问 /hello 接口。
+                 * 在 Chrome 上再次访问 /hello 接口，此时会看到如下提示：
+                 * This session has been expired (possibly due to multiple concurrent logins being attempted as the same user).
+                 */
+                // 1、新的登录踢掉旧的登录，我们只需要将最大会话数设置为 1 即可
+                .sessionManagement()
+                .maximumSessions(1)
+                // 2、禁止新的登录操作
+                .maxSessionsPreventsLogin(true);
     }
 
+    /**
+     * 2、禁止新的登录操作 还需要添加这个bean
+     * 在 Spring Security 中，它是通过监听 session 的销毁事件，来及时的清理 session 的记录。
+     * 用户从不同的浏览器登录后，都会有对应的 session，当用户注销登录之后，session 就会失效，但是默认的失效是通过调用 StandardSession#invalidate 方法来实现的，
+     * 这一个失效事件无法被 Spring 容器感知到，进而导致当用户注销登录之后，Spring Security 没有及时清理会话信息表，以为用户还在线，进而导致用户无法重新登录进来
+     * 
+     * @return
+     */
+    @Bean
+    HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+    
     /**
      * 角色继承
      * 所有 user 能够访问的资源，admin 都能够访问
