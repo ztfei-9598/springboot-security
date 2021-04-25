@@ -1,0 +1,12 @@
+server:
+  port: 8080
+# spring相关
+spring:
+  # 在内存中创建个用户    
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: admin
+
+
