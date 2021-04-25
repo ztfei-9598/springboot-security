@@ -109,6 +109,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Override
     public void configure(WebSecurity web) throws Exception {
+        /**
+         * 这种方式是不走 Spring Security 过滤器链
+         */
         // 用来配置忽略掉的 URL 地址，一般对于静态文件，我们可以采用此操作
         web.ignoring().antMatchers("/js/**", "/css/**", "/images/**");
     }
@@ -140,6 +143,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                  *
                  * 二、拦截规则的配置类 AbstractRequestMatcherRegistry
                  *      在任何拦截规则之前（包括 anyRequest 自身），都会先判断 anyRequest 是否已经配置，如果已经配置，则会抛出异常，系统启动失败
+                 * 三、
+                 *      这种方式走 Spring Security 过滤器链，在过滤器链中，给请求放行
+                 *      登录请求必须要走 Spring Security 过滤器链，因为在这个过程中，还有其他事情要做：否则不同的请求线程，得到不同的登录结果。
+                 *      用户登录成功之后，有两种方式获取用户登录信息：
+                 *          - SecurityContextHolder.getContext().getAuthentication()
+                 *          - Controller 的方法中，加入 Authentication 参数
+                 * 四、SecurityContextPersistenceFilter          
+                 *      请求在到达 UsernamePasswordAuthenticationFilter 之前都会先经过 SecurityContextPersistenceFilter。
+                 *      每一个请求到达服务端的时候，首先从 session 中找出来 SecurityContext ，然后设置到 SecurityContextHolder 中去，方便后续使用，
+                 *      当这个请求离开的时候，SecurityContextHolder 会被清空，SecurityContext 会被放回 session 中，方便下一个请求来的时候获取    
+                 *      
+                 *      如果我们暴露登录接口的时候，使用了前面提到的第一种方式，没有走 Spring Security，过滤器链，
+                 *      则在登录成功后，就不会将登录用户信息存入 session 中，进而导致后来的请求都无法获取到登录用户信息
                  */
 //                .antMatchers("/admin/**").hasRole("admin")
 //                .antMatchers("/user/**").hasRole("user")
