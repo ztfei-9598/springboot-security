@@ -1,0 +1,18 @@
+server:
+  port: 8080
+# spring相关
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/spring-security?useUnicode=true&allowPublicKeyRetrieval=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+
+# com.springboot.security 日志等级debug
+logging:
+  level: 
+    com:
+      springboot:
+        security: debug
+
+
