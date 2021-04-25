@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="/hello" method="post">
+    <!-- 在发送 POST 请求的时候，还额外携带了一个隐藏域，隐藏域的 key 是 ${_csrf.parameterName}，value 则是 ${_csrf.token} -->
+    <input type="hidden" th:value="${_csrf.token}" th:name="${_csrf.parameterName}">
+    <input type="submit" value="hello">
+</form>
+</body>
+</html>
